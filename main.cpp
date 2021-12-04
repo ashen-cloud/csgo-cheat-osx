@@ -29,7 +29,7 @@ bool is_success(int res) {
   }
 }
 
-void search_module(int task) {
+const mach_header * search_module(int task, char* lib_name) {
   struct task_dyld_info dyld_info;
   unsigned int noop = TASK_DYLD_INFO_COUNT;
   int info = task_info(task, TASK_DYLD_INFO, (int *)&dyld_info, &noop);
@@ -48,6 +48,21 @@ void search_module(int task) {
     auto infos = (dyld_all_image_infos *) mem;
     int infos_count = infos->infoArrayCount;
     cout << "infos count " << infos_count << endl;
+    unsigned int size1 = infos_count * 24; // sizeof(struct dyld_image_info) * infos->infoArrayCount
+    int read_res1 = vm_read(task, (unsigned long) infos->infoArray, size1, &mem, &size1);
+    is_success(read_res1);
+    struct dyld_image_info* info = (struct dyld_image_info*) mem;
+    cout << "info mem " << mem << endl;
+    unsigned int lim = 512;
+    for (int i = 0; i < infos_count; i++) {
+      vm_read(task, (unsigned long) info[i].imageFilePath, lim, &mem, &lim);
+      char *lib_path = (char *) mem;
+      // cout << "lib_path " << lib_path << endl;
+      if (strstr(lib_path, lib_name) != NULL) {
+        auto lib = info[i].imageLoadAddress;
+        return lib; // todo: convert to proper type
+      }
+    }
   }
 }
 
@@ -66,7 +81,8 @@ int main() {
 
   auto task = create_task(cs_pid);
 
-  search_module(task);
+  auto client = search_module(task, "/client.dylib");
+  cout << "CLIENT " << client << endl;
 
   return 0;
 }
