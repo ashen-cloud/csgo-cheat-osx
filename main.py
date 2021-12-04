@@ -1,5 +1,7 @@
 #!/opt/homebrew/bin/python3
 
+# todo: write a wrapper in python
+
 import psutil
 
 def main():
