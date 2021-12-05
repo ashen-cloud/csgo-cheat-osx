@@ -77,7 +77,7 @@ int create_task(int pid) {
 }
 
 template <class T>
-T addr_to_str(unsigned int task, unsigned long addr, unsigned int size=512) {
+T read_addr(unsigned int task, unsigned long addr, unsigned int size=sizeof(T)) {
   unsigned long mem;
 
   int read_res = vm_read(task, addr, size, &mem, &size);
@@ -95,6 +95,10 @@ int write_to_addr(unsigned int task, unsigned long addr, T data) {
   int write_res = vm_write(task, addr, &data, sizeof(T));
   is_success(write_res);
   return write_res;
+}
+
+char* addr_to_str(unsigned int task, unsigned long addr) {
+  return "";
 }
 
 int main() {
