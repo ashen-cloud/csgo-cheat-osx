@@ -55,8 +55,9 @@ const mach_header * search_module(int task, char* lib_name) {
     cout << "info mem " << mem << endl;
     unsigned int lim = 512;
     for (int i = 0; i < infos_count; i++) {
+      // todo: refactor to addr_to_str
       vm_read(task, (unsigned long) info[i].imageFilePath, lim, &mem, &lim);
-      char *lib_path = (char *) mem;
+      char* lib_path = (char *) mem;
       // cout << "lib_path " << lib_path << endl;
       if (strstr(lib_path, lib_name) != NULL) {
         auto lib = info[i].imageLoadAddress;
@@ -73,6 +74,27 @@ int create_task(int pid) {
     return task;
   }
   return -1;
+}
+
+template <class T>
+T addr_to_str(unsigned int task, unsigned long addr, unsigned int size=512) {
+  unsigned long mem;
+
+  int read_res = vm_read(task, addr, size, &mem, &size);
+  is_success(read_res);
+
+  T return_data = (T)* (T*) mem;
+
+  vm_deallocate(current_task(), mem, size);
+
+  return return_data;
+}
+
+template <class T>
+int write_to_addr(unsigned int task, unsigned long addr, T data) {
+  int write_res = vm_write(task, addr, &data, sizeof(T));
+  is_success(write_res);
+  return write_res;
 }
 
 int main() {
